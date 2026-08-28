@@ -1,15 +1,16 @@
 # NUTZ · Forms — Netlify deploy config
 # הטפסים הם קבצי HTML עצמאיים (פונטים ו-CSS מוטמעים), אין שלב build.
+#
+# הנתיבים הציבוריים:
+#   https://nutz-forms.netlify.app/intake/form   שאלון קבלת מתאמן
+#   https://nutz-forms.netlify.app/health/form   הצהרת בריאות
+#
+# כללי הפניה (אותיות גדולות, נתיבים מקוצרים) יושבים ב-dist/_redirects,
+# כדי שיעבדו גם בהעלאה ידנית של התיקייה וגם בפריסה מ-Git.
 
 [build]
   publish = "dist"
   command = ""
-
-# הנתיבים הציבוריים:
-#   /NUTZ/HEALTH/FORM  ->  dist/NUTZ/HEALTH/FORM/index.html
-#   /NUTZ/INTAKE/FORM  ->  dist/NUTZ/INTAKE/FORM/index.html
-# שים לב: נתיבים ב-Netlify הם case-sensitive. הקישורים חייבים
-# להישלח באותיות גדולות בדיוק כמו שכתוב כאן.
 
 [[headers]]
   for = "/*"

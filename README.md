@@ -3,27 +3,30 @@
 שני טפסים סטטיים, כל אחד קובץ HTML עצמאי אחד (פונטים, CSS ו-JS מוטמעים
 בפנים — אפס תלויות חיצוניות, אין שלב build).
 
+אתר Netlify: **nutz-forms.netlify.app**
+
+## הלינקים לשליחה
+
+| טופס | כתובת |
+|---|---|
+| שאלון קבלת מתאמן | `https://nutz-forms.netlify.app/intake/form` |
+| הצהרת בריאות | `https://nutz-forms.netlify.app/health/form` |
+
+הנתיבים באותיות קטנות. מי שיכתוב `/INTAKE/FORM` או סתם `/intake`
+יופנה אוטומטית לכתובת הנכונה (ראה `dist/_redirects`).
+
 ## מבנה
 
 ```
 netlify.toml            הגדרות Netlify (publish = dist)
 dist/                   ← זו התיקייה שעולה לאוויר
   index.html            עמוד ריכוז עם קישור לשני הטפסים
+  _redirects            הפניות מנתיבים חלופיים לנתיב הקנוני
+  _headers              כותרות אבטחה
   robots.txt            חוסם אינדוקס בגוגל (מחק אם רוצים שיופיעו בחיפוש)
-  _headers              כותרות אבטחה (עובד גם בהעלאה ידנית)
-  NUTZ/HEALTH/FORM/index.html   ← הצהרת בריאות
-  NUTZ/INTAKE/FORM/index.html   ← שאלון קבלת מתאמן
+  intake/form/index.html   ← שאלון קבלת מתאמן
+  health/form/index.html   ← הצהרת בריאות
 ```
-
-## הנתיבים הציבוריים
-
-| טופס | כתובת |
-|---|---|
-| הצהרת בריאות | `https://<site>.netlify.app/NUTZ/HEALTH/FORM` |
-| שאלון קבלת מתאמן | `https://<site>.netlify.app/NUTZ/INTAKE/FORM` |
-
-⚠️ נתיבים ב-Netlify הם **case-sensitive**. הקישורים חייבים להישלח באותיות
-גדולות בדיוק כמו למעלה. `/nutz/health/form` יחזיר 404.
 
 ## איך מעלים
 
@@ -37,8 +40,8 @@ dist/                   ← זו התיקייה שעולה לאוויר
 
 ## עדכון טופס
 
-עורכים ישירות את `dist/NUTZ/HEALTH/FORM/index.html` או
-`dist/NUTZ/INTAKE/FORM/index.html` ומעלים מחדש. אין קובץ מקור נפרד.
+עורכים ישירות את `dist/intake/form/index.html` או
+`dist/health/form/index.html` ומעלים מחדש. אין קובץ מקור נפרד.
 
 ## שליחת הטפסים
 

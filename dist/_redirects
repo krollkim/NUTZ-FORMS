@@ -1,0 +1,10 @@
+# הנתיבים הקנוניים הם באותיות קטנות: /intake/form ו-/health/form
+# הכללים כאן תופסים כתיבה באותיות גדולות ונתיבים מקוצרים, ומפנים לקנוני.
+# הם לא כפויים (בלי !), כלומר קובץ אמיתי תמיד מנצח - אין סיכון ללולאה.
+
+/INTAKE/FORM/*        /intake/form/   301
+/HEALTH/FORM/*        /health/form/   301
+/NUTZ/INTAKE/FORM/*   /intake/form/   301
+/NUTZ/HEALTH/FORM/*   /health/form/   301
+/intake               /intake/form/   301
+/health               /health/form/   301
