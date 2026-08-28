@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>NUTZ Calisthenics · טפסים</title>
+<style>
+  :root{
+    --bg:#110c06; --surface:#1a130d; --line:#2c1f13;
+    --text:#e3d6c3; --muted:#a0907b; --cream:#efd9a8;
+    --gold:#d4a845; --amber:#e09038; --on-amber:#351300;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100dvh; padding:32px 20px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg); color:var(--text);
+    font-family:"Heebo","Segoe UI","Arial Hebrew",system-ui,sans-serif;
+    line-height:1.6;
+  }
+  main{width:100%; max-width:520px}
+  h1{
+    margin:0 0 6px; font-size:1.55rem; letter-spacing:.02em;
+    color:var(--cream); font-weight:700;
+  }
+  .sub{margin:0 0 28px; color:var(--muted); font-size:.95rem}
+  a.card{
+    display:block; padding:18px 20px; margin-bottom:12px;
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    color:var(--text); text-decoration:none;
+    transition:border-color .18s ease, transform .18s ease, background .18s ease;
+  }
+  a.card:hover,a.card:focus-visible{
+    border-color:var(--gold); background:#1f1710; transform:translateY(-2px);
+  }
+  a.card:focus-visible{outline:2px solid var(--amber); outline-offset:3px}
+  .t{display:block; font-weight:700; color:var(--cream); font-size:1.05rem}
+  .d{display:block; color:var(--muted); font-size:.88rem; margin-top:3px}
+  footer{margin-top:24px; color:#6b5d4c; font-size:.8rem; text-align:center}
+</style>
+</head>
+<body>
+<main>
+  <h1>NUTZ Calisthenics</h1>
+  <p class="sub">טפסים דיגיטליים · ליאב ברודש</p>
+
+  <a class="card" href="/NUTZ/INTAKE/FORM/">
+    <span class="t">שאלון קבלת מתאמן</span>
+    <span class="d">פרטים אישיים, מטרות ורקע אימוני</span>
+  </a>
+
+  <a class="card" href="/NUTZ/HEALTH/FORM/">
+    <span class="t">הצהרת בריאות</span>
+    <span class="d">שאלון בריאות לפני תחילת האימונים</span>
+  </a>
+
+  <footer><span dir="ltr">© NUTZ Calisthenics</span></footer>
+</main>
+</body>
+</html>

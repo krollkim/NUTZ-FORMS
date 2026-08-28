@@ -1,0 +1,19 @@
+# NUTZ · Forms — Netlify deploy config
+# הטפסים הם קבצי HTML עצמאיים (פונטים ו-CSS מוטמעים), אין שלב build.
+
+[build]
+  publish = "dist"
+  command = ""
+
+# הנתיבים הציבוריים:
+#   /NUTZ/HEALTH/FORM  ->  dist/NUTZ/HEALTH/FORM/index.html
+#   /NUTZ/INTAKE/FORM  ->  dist/NUTZ/INTAKE/FORM/index.html
+# שים לב: נתיבים ב-Netlify הם case-sensitive. הקישורים חייבים
+# להישלח באותיות גדולות בדיוק כמו שכתוב כאן.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
