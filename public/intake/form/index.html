@@ -232,6 +232,9 @@ textarea{min-height:104px; resize:vertical; line-height:1.7}
 }
 .scale .chip{min-width:50px; padding:9px 0; text-align:center; font-variant-numeric:tabular-nums}
 .chip.full{width:100%; border-style:dashed; border-radius:var(--r-sm); margin-top:9px}
+/* שדה פירוט שנחשף כשנבחר צ'יפ שדורש הסבר, למשל "משתנה" */
+.detail{margin-top:11px}
+.detail[hidden]{display:none}
 
 .bad-msg{display:none; color:var(--err); font-size:12.5px; margin-top:9px; font-weight:600}
 .q.bad .bad-msg{display:block}
@@ -355,7 +358,7 @@ textarea{min-height:104px; resize:vertical; line-height:1.7}
       <div class="bad-msg">יש לבחור אפשרות</div>
     </div>
 
-    <div class="q" data-f="duration" data-n="08" data-chip>
+    <div class="q" data-f="duration" data-n="08" data-chip data-detail="משתנה">
       <span class="lab">כמה זמן אתה יכול להקדיש לאימון? <span class="star">*</span></span>
       <div class="chips" role="group">
         <button type="button" class="chip" aria-pressed="false">30-45 דק׳</button>
@@ -363,6 +366,8 @@ textarea{min-height:104px; resize:vertical; line-height:1.7}
         <button type="button" class="chip" aria-pressed="false">90+ דק׳</button>
         <button type="button" class="chip" aria-pressed="false">משתנה</button>
       </div>
+      <input type="text" class="detail" hidden
+             placeholder="איך זה משתנה? למשל 40 דק׳ באמצע השבוע, שעה בסופ״ש">
       <div class="bad-msg">יש לבחור אפשרות</div>
     </div>
 
@@ -380,8 +385,9 @@ textarea{min-height:104px; resize:vertical; line-height:1.7}
     </div>
 
     <div class="q" data-f="gear" data-n="10">
-      <label for="gear">יש לך ציוד שנוכל להשתמש בו לאימונים?</label>
-      <input type="text" id="gear" placeholder="גומיות, מקבילים, מתח בבית...">
+      <label for="gear">מה מפת האימונים שלך?</label>
+      <span class="tip">איזה ציוד זמין לך, ואיפה אתה מתאמן - בית, פארק, חדר כושר, ים, או בכל מקום אחר.</span>
+      <textarea id="gear" placeholder="מתח וגומיות בבית, מקבילים בפארק ליד, חדר כושר פעמיים בשבוע"></textarea>
     </div>
 
     <div class="acts">
@@ -494,12 +500,25 @@ function goto(n){
 
 /* ─── צ׳יפים ─── */
 document.querySelectorAll('[data-chip]').forEach(box=>{
+  // צ'יפ שערכו לבדו לא אומר כלום - כמו "משתנה" - מסומן ב-data-detail
+  // וחושף שדה פירוט. הפירוט חובה, אחרת התשובה חסרת ערך לתכנון.
+  const detail=box.querySelector('.detail'), msg=box.querySelector('.bad-msg');
+
   box.querySelectorAll('.chip').forEach(btn=>btn.addEventListener('click',()=>{
     box.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));
     btn.setAttribute('aria-pressed','true');
     data[box.dataset.f]=btn.textContent.trim();
     box.classList.remove('bad');
+
+    if(!detail) return;
+    const needs = btn.textContent.trim()===box.dataset.detail;
+    detail.hidden=!needs;
+    if(!needs) detail.value='';
+    if(msg) msg.textContent = needs ? 'יש לפרט' : 'יש לבחור אפשרות';
+    if(needs) detail.focus();
   }));
+
+  if(detail) detail.addEventListener('input',()=>box.classList.remove('bad'));
 });
 
 /* ─── ולידציה ─── */
@@ -509,7 +528,18 @@ function check(panel){
     if(!q.querySelector('.star')) return;
     const f=q.dataset.f;
     let filled;
-    if(q.hasAttribute('data-chip')) filled = !!data[f];
+    if(q.hasAttribute('data-chip')){
+      filled = !!data[f];
+      const detail = q.querySelector('.detail');
+      // צ'יפ עם פירוט גלוי לא נחשב מלא עד שהפירוט הוזן. הערך הנשלח
+      // מורכב מחדש בכל בדיקה מ-dataset ולא מ-data, כדי שבדיקה חוזרת
+      // לא תשרשר את הפירוט פעמיים.
+      if(filled && detail && !detail.hidden){
+        const extra = detail.value.trim();
+        filled = extra !== '';
+        if(filled) data[f] = q.dataset.detail + ' - ' + extra;
+      }
+    }
     else{
       const el=q.querySelector('input,textarea');
       filled = el && el.value.trim()!=='';
@@ -528,7 +558,7 @@ document.querySelectorAll('input,textarea').forEach(el=>{
 /* ─── סיכום ─── */
 const LABELS={name:'שם מלא',age:'גיל',weight:'משקל (ק״ג)',height:'גובה (ס״מ)',
   trained:'התאמן בעבר',goals:'מטרות',freq:'תדירות',duration:'משך אימון',
-  job:'פיזיות בעבודה',gear:'ציוד זמין',pullups:'מתח',dips:'מקבילים',
+  job:'פיזיות בעבודה',gear:'מפת אימונים',pullups:'מתח',dips:'מקבילים',
   pushups:'שכיבות שמיכה',legs:'מצב רגליים',advanced:'תרגילים מתקדמים'};
 const summary = () => 'גליון הרשמה - NUTZ Calisthenics\n\n' +
   Object.keys(LABELS).filter(k=>data[k]).map(k=>`${LABELS[k]}: ${data[k]}`).join('\n');
