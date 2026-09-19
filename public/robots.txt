@@ -1,0 +1,20 @@
+# הטפסים פרטיים - לא נכנסים לאינדוקס של גוגל.
+# למי שרוצה כן שהעמודים יופיעו בחיפוש: מחק את הקובץ הזה.
+
+# בוטי התצוגה המקדימה של אפליקציות ההודעות - מורשים.
+# בלעדיהם הקישור בוואטסאפ מופיע כטקסט יבש, בלי כרטיס.
+User-agent: WhatsApp
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: Telegrambot
+Allow: /
+
+# כל השאר - חסום.
+User-agent: *
+Disallow: /

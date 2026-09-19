@@ -2,14 +2,14 @@
 # הטפסים הם קבצי HTML עצמאיים (פונטים ו-CSS מוטמעים), אין שלב build.
 #
 # הנתיבים הציבוריים:
-#   https://nutz-forms.netlify.app/intake/form   שאלון קבלת מתאמן
-#   https://nutz-forms.netlify.app/health/form   הצהרת בריאות
+#   https://nutz-forms.netlify.app/intake/form   גליון הרשמה
+#   https://nutz-forms.netlify.app/health/form   גליון הצהרת בריאות
 #
-# כללי הפניה (אותיות גדולות, נתיבים מקוצרים) יושבים ב-dist/_redirects,
+# כללי הפניה (אותיות גדולות, נתיבים מקוצרים) יושבים ב-public/_redirects,
 # כדי שיעבדו גם בהעלאה ידנית של התיקייה וגם בפריסה מ-Git.
 
 [build]
-  publish = "dist"
+  publish = "public"
   command = ""
 
 [[headers]]
