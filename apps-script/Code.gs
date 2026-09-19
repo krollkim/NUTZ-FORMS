@@ -203,10 +203,93 @@ function handleForm_(data) {
     var sheet = getOrCreateTab_(NUTZ_TABS[data.form], columns);
 
     appendRow_(sheet, columns, buildRow_(sheet, columns, flatten_(data)));
-    return jsonOut_({ status: 'ok', tab: NUTZ_TABS[data.form] });
   } finally {
     lock.releaseLock();
   }
+
+  // המסמך נשמר אחרי שהשורה כבר בגיליון, מחוץ לנעילה ובתוך try משלו.
+  // השורה היא הרשומה הקריטית; תקלה ב-Drive לא תפיל אותה ולא תגרום
+  // למתאמן למלא שוב. כישלון נרשם ללשונית השגיאות.
+  var fileUrl = '';
+  if (data.form === 'health' && data.docHtml) {
+    try {
+      fileUrl = saveDeclarationPdf_(data);
+    } catch (err) {
+      logError_('שמירת מסמך ל-Drive', err);
+    }
+  }
+
+  return jsonOut_({ status: 'ok', tab: NUTZ_TABS[data.form], file: fileUrl });
+}
+
+/**
+ * שם התיקייה ב-Drive שאליה נשמרות ההצהרות.
+ * נוצרת ב-Drive של *בעל הסקריפט* ופרטית כברירת מחדל. היא מכילה
+ * תעודות זהות ומידע רפואי - לא לשתף בהרחבה.
+ */
+var DECLARATION_FOLDER = 'NUTZ · הצהרות בריאות';
+
+/**
+ * ממיר את ה-HTML שהטופס שלח למסמך PDF ושומר אותו ב-Drive.
+ * ה-HTML נלכד בדפדפן מאותו אלמנט שהמתאמן רואה ומוריד, כך שאין
+ * שתי גרסאות עיצוב שעלולות להתפצל.
+ */
+function saveDeclarationPdf_(data) {
+  var name = String(data.name || 'ללא שם').replace(/[\\\/:*?"<>|]/g, '-').trim();
+
+  // השם ראשון כדי ש-Drive יקבץ יחד את כל המסמכים של אותו מתאמן.
+  // התאריך אינו לתיעוד - הוא קיים גם בתוך המסמך - אלא כדי להבדיל
+  // בין הצהרות חוזרות של אותו אדם, שאחרת היו נושאות שם זהה.
+  var fileName = name + ' · הצהרת בריאות · ' + isoDate_(data.date) + '.pdf';
+
+  var pdf = Utilities
+    .newBlob(data.docHtml, 'text/html', fileName)
+    .getAs('application/pdf')
+    .setName(fileName);
+
+  return declarationFolder_().createFile(pdf).getUrl();
+}
+
+/**
+ * תיקיית האב שבתוכה תיווצר תיקיית ההצהרות.
+ *
+ * השאר ריק כדי שהיא תיווצר *לצד קובץ הגיליון* - כך היא הולכת
+ * לאן שהגיליון מסודר, ולא נוחתת בשורש ה-Drive כקובץ יתום.
+ *
+ * למיקום אחר: פתח את התיקייה הרצויה ב-Drive והעתק מהכתובת את
+ * מה שאחרי folders/ ‒
+ *   drive.google.com/drive/folders/1AbC...XyZ   ←   זה המזהה
+ */
+var DECLARATION_PARENT_ID = '';
+
+/**
+ * מחזיר את תיקיית ההצהרות, ויוצר אותה בהרצה הראשונה.
+ *
+ * החיפוש הוא לפי שם ובכל ה-Drive, ולכן אפשר לגרור את התיקייה
+ * לכל מקום בלי לשבור כלום - היא תימצא גם אחרי שהוזזה. המיקום
+ * שלמטה קובע רק היכן היא *נוצרת* בפעם הראשונה.
+ */
+function declarationFolder_() {
+  var existing = DriveApp.getFoldersByName(DECLARATION_FOLDER);
+  if (existing.hasNext()) return existing.next();
+
+  return declarationParent_().createFolder(DECLARATION_FOLDER);
+}
+
+/**
+ * תיקיית האב ליצירה: המזהה שהוגדר ידנית, ואם אין - התיקייה שבה
+ * יושב הגיליון. נפילה לשורש קורית רק אם הגיליון עצמו בשורש.
+ */
+function declarationParent_() {
+  if (DECLARATION_PARENT_ID) {
+    return DriveApp.getFolderById(DECLARATION_PARENT_ID);
+  }
+
+  var parents = DriveApp
+    .getFileById(SpreadsheetApp.getActiveSpreadsheet().getId())
+    .getParents();
+
+  return parents.hasNext() ? parents.next() : DriveApp.getRootFolder();
 }
 
 /**
@@ -332,6 +415,28 @@ function appendRow_(sheet, columns, values) {
 /* ══════════════════════════════════════════════════════════════════════
    עזר
    ══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * ממיר 19.09.2026 ל-2026-09-19, לשימוש בשמות קבצים.
+ *
+ * הסדר ההפוך הוא מה שגורם לכמה הצהרות של אותו מתאמן להסתדר
+ * כרונולוגית ברשימת הקבצים. בפורמט הישראלי 01.02.2027 היה
+ * מופיע לפני 19.09.2026, כי המיון הוא אלפביתי ולא לפי תאריך.
+ *
+ * ערך שאינו בפורמט הצפוי מוחלף בתאריך של היום, כדי שלעולם לא
+ * ייווצר שם קובץ עם תו אסור או בלי תאריך בכלל.
+ */
+function isoDate_(raw) {
+  var parts = String(raw || '').trim().match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/);
+  if (parts) {
+    return parts[3] + '-' + pad2_(parts[2]) + '-' + pad2_(parts[1]);
+  }
+  return Utilities.formatDate(new Date(), 'Asia/Jerusalem', 'yyyy-MM-dd');
+}
+
+function pad2_(value) {
+  return String(value).length === 1 ? '0' + value : String(value);
+}
 
 /** חותמת זמן ישראלית. נוצרת בשרת, כדי שלא תהיה תלויה באזור הזמן של הדפדפן. */
 function israeliTimestamp_() {
@@ -465,8 +570,54 @@ function nutzSelfTest() {
     id: '012345678', phone: '0501234567', date: '01.01.2026',
     answers: ['לא', 'לא', 'לא', 'לא', 'כן', 'לא', 'לא', 'לא', 'לא'],
     sign: 'בדיקה 000000000',
-    source: 'בדיקה'
+    source: 'בדיקה',
+    // בלי השדה הזה ענף ה-PDF מדולג, ואז הבדיקה לא נוגעת ב-Drive:
+    // לא נוצר קובץ, ולא נדרשת הרשאה. זו הייתה נקודה עיוורת בבדיקה.
+    docHtml: selfTestDocHtml_()
   });
 
-  Logger.log('נוצרו שתי לשוניות עם שורת בדיקה בכל אחת. בדוק ומחק אותן.');
+  // בייצור, כשל בשמירת המסמך נבלע בכוונה ונרשם ללשונית "שגיאות",
+  // כדי שלא יפיל את ההגשה. בבדיקה זה בדיוק ההפך ממה שרוצים:
+  // הקריאה כאן ישירה ובלי רשת ביטחון, כדי שהתוצאה - הצלחה או
+  // שגיאה מלאה - תופיע כאן ביומן ולא תדרוש חיפוש במקום אחר.
+  var verdict;
+  try {
+    var url = saveDeclarationPdf_({
+      form: 'health',
+      name: 'בדיקה - מחק אותי',
+      date: '01.01.2026',
+      docHtml: selfTestDocHtml_()
+    });
+    verdict = '✅ המסמך נוצר.\n' +
+      'קישור: ' + url + '\n' +
+      'פתח אותו ובדוק שהעברית קריאה ושת״ז מופיעה כ-012345678.';
+  } catch (err) {
+    verdict = '❌ יצירת המסמך נכשלה:\n' + String(err) + '\n' +
+      'השורות בגיליון נכתבו בכל זאת - זו ההפרדה שתוכננה.';
+  }
+
+  Logger.log('נכתבו שתי שורות בדיקה בלשוניות.\n\n' + verdict +
+    '\n\nמחק אחר כך את שורות הבדיקה ואת הקובץ.');
+}
+
+/**
+ * מסמך מוקטן לבדיקת ההמרה של Apps Script מ-HTML ל-PDF.
+ *
+ * המסמך האמיתי נלכד בדפדפן ונשלח בשדה docHtml. כאן, כשמריצים
+ * מהעורך, אין דפדפן - ולכן נבנה מסמך מינימלי שבודק בדיוק את מה
+ * שעלול להישבר בהמרה: עברית, כיווניות RTL, ואפס מוביל בת״ז.
+ */
+function selfTestDocHtml_() {
+  return '<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8">' +
+    '<style>@page{size:A4;margin:13mm 12mm}' +
+    'body{margin:0;font-family:Arial,sans-serif;direction:rtl}' +
+    'h1{font-size:16pt}td{padding:4px 10px;border-bottom:1px solid #ddd}</style>' +
+    '</head><body>' +
+    '<h1>בדיקת המרה - גליון הצהרת בריאות</h1>' +
+    '<p>אם העברית כאן קריאה והספרות למטה נכונות, ההמרה עובדת.</p>' +
+    '<table><tr><td>שם מלא</td><td>בדיקה - מחק אותי</td></tr>' +
+    '<tr><td>ת״ז</td><td>012345678</td></tr>' +
+    '<tr><td>טלפון</td><td>0501234567</td></tr></table>' +
+    '<p>ת״ז אמורה להופיע עם האפס המוביל: <b>012345678</b></p>' +
+    '</body></html>';
 }
